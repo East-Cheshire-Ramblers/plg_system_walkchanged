@@ -2,10 +2,10 @@
 
 /**
  * @package     Joomla.Plugin
- * @subpackage  System.walkchanged
+ * @subpackage  System.ra_tweaks
  */
 
-namespace Ramblerseastcheshire\Plugin\System\Walkchanged\Extension;
+namespace Ramblerseastcheshire\Plugin\System\RaTweaks\Extension;
 
 \defined('_JEXEC') or die;
 
@@ -16,7 +16,7 @@ use Joomla\Event\SubscriberInterface;
 /**
  * Colours changed Ramblers walk items in the final rendered page output.
  */
-final class Walkchanged extends CMSPlugin implements SubscriberInterface
+final class RaTweaks extends CMSPlugin implements SubscriberInterface
 {
 	/**
 	 * @var CMSApplicationInterface
@@ -262,7 +262,7 @@ final class Walkchanged extends CMSPlugin implements SubscriberInterface
 	private function hasMarkerBadge(\DOMElement $container): bool
 	{
 		foreach ($container->getElementsByTagName('span') as $span) {
-			if ($span instanceof \DOMElement && $span->getAttribute('data-walkchanged-marker') === '1') {
+			if ($span instanceof \DOMElement && $span->getAttribute('data-ra_tweaks-marker') === '1') {
 				return true;
 			}
 		}
@@ -273,7 +273,7 @@ final class Walkchanged extends CMSPlugin implements SubscriberInterface
 	private function createMarkerBadge(\DOMDocument $document, string $marker, string $colour): \DOMElement
 	{
 		$badge = $document->createElement('span');
-		$badge->setAttribute('data-walkchanged-marker', '1');
+		$badge->setAttribute('data-ra_tweaks-marker', '1');
 		$badge->setAttribute('title', 'Walk details changed');
 		$badge->setAttribute('aria-label', 'Walk details changed');
 		$badge->setAttribute('style', $this->markerBadgeStyle($colour));
@@ -323,7 +323,7 @@ final class Walkchanged extends CMSPlugin implements SubscriberInterface
 	private function applyColourToNode(\DOMNode $node, string $colour): void
 	{
 		if ($node instanceof \DOMElement) {
-			if ($node->getAttribute('data-walkchanged-marker') === '1') {
+			if ($node->getAttribute('data-ra_tweaks-marker') === '1') {
 				return;
 			}
 
@@ -356,7 +356,7 @@ final class Walkchanged extends CMSPlugin implements SubscriberInterface
 	 */
 	private function injectFrontendScript(string $body, string $marker, string $colour, array $cancelTerms): string
 	{
-		if (str_contains($body, 'id="plg-system-walkchanged-script"')) {
+		if (str_contains($body, 'id="plg-system-ra_tweaks-script"')) {
 			return $body;
 		}
 
@@ -373,7 +373,7 @@ final class Walkchanged extends CMSPlugin implements SubscriberInterface
 			return $body;
 		}
 
-		$script = '<script id="plg-system-walkchanged-script">(' . $this->frontendScript() . ')(' . $config . ');</script>';
+		$script = '<script id="plg-system-ra_tweaks-script">(' . $this->frontendScript() . ')(' . $config . ');</script>';
 
 		if (stripos($body, '</body>') !== false) {
 			return preg_replace('/<\/body>/i', $script . '</body>', $body, 1) ?? $body;
@@ -417,11 +417,11 @@ function(config) {
 		while (current) {
 			var name = current.tagName.toLowerCase();
 
-			if (current.getAttribute("data-walkchanged-processed") === "1") {
+			if (current.getAttribute("data-ra_tweaks-processed") === "1") {
 				return true;
 			}
 
-			if (current.getAttribute("data-walkchanged-marker") === "1") {
+			if (current.getAttribute("data-ra_tweaks-marker") === "1") {
 				return true;
 			}
 
@@ -490,7 +490,7 @@ function(config) {
 	}
 
 	function prependMarker(container) {
-		if (container.querySelector("[data-walkchanged-marker='1']")) {
+		if (container.querySelector("[data-ra_tweaks-marker='1']")) {
 			return;
 		}
 
@@ -508,7 +508,7 @@ function(config) {
 
 	function createMarkerBadge() {
 		var badge = document.createElement("span");
-		badge.setAttribute("data-walkchanged-marker", "1");
+		badge.setAttribute("data-ra_tweaks-marker", "1");
 		badge.setAttribute("title", "Walk details changed");
 		badge.setAttribute("aria-label", "Walk details changed");
 		badge.style.display = "inline-grid";
@@ -532,13 +532,13 @@ function(config) {
 
 	function colourElement(element) {
 		if (element.nodeType === Node.ELEMENT_NODE) {
-			if (element.getAttribute("data-walkchanged-marker") === "1") {
+			if (element.getAttribute("data-ra_tweaks-marker") === "1") {
 				return;
 			}
 
 			element.style.color = colour;
 			Array.prototype.slice.call(element.querySelectorAll("*")).forEach(function(child) {
-				if (child.getAttribute("data-walkchanged-marker") === "1") {
+				if (child.getAttribute("data-ra_tweaks-marker") === "1") {
 					return;
 				}
 
@@ -583,7 +583,7 @@ function(config) {
 	}
 
 	function processElement(container) {
-		if (!container || isCancelled(container) || container.getAttribute("data-walkchanged-processed") === "1") {
+		if (!container || isCancelled(container) || container.getAttribute("data-ra_tweaks-processed") === "1") {
 			return;
 		}
 
@@ -607,7 +607,7 @@ function(config) {
 
 		prependMarker(container);
 		colourElement(container);
-		container.setAttribute("data-walkchanged-processed", "1");
+		container.setAttribute("data-ra_tweaks-processed", "1");
 	}
 
 	function process() {

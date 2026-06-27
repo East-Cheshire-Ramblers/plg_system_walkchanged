@@ -1,8 +1,8 @@
-# plg_system_walkchanged
+# ra_tweaks
 
-A simple Joomla system plugin to configure changing the look of an edited walk.
+A Joomla system plugin for East Cheshire Ramblers site tweaks.
 
-It highlights rendered Ramblers walk titles that contain a configurable marker such as `***`, while skipping cancelled walks.
+The first tweak highlights rendered Ramblers walk titles that contain a configurable marker such as `***`, while skipping cancelled walks.
 
 ## Behaviour
 
@@ -19,28 +19,28 @@ It highlights rendered Ramblers walk titles that contain a configurable marker s
 
 ## Install
 
-Zip the contents of `plg_system_walkchanged` and install the zip in Joomla:
+Zip the contents of `plg_system_ra_tweaks` and install the zip in Joomla:
 
 ```sh
-cd plg_system_walkchanged
-zip -r ../plg_system_walkchanged.zip .
+cd plg_system_ra_tweaks
+zip -r ../ra_tweaks-1.1.5.zip .
 ```
 
 Then in Joomla:
 
 1. Go to **System > Install > Extensions**.
-2. Upload `plg_system_walkchanged.zip`.
+2. Upload `ra_tweaks-1.1.5.zip`.
 3. Go to **System > Manage > Plugins**.
-4. Enable **System - Walk Changed Highlighter**.
+4. Enable **System - RA Tweaks**.
 5. Configure the marker and colour.
 
 ## Updates
 
 The plugin manifest registers a Joomla update server:
 
-`https://raw.githubusercontent.com/East-Cheshire-Ramblers/plg_system_walkchanged/main/updates.xml`
+`https://raw.githubusercontent.com/East-Cheshire-Ramblers/ra_tweaks/main/updates/ra_tweaks.xml`
 
-For each release, update `updates.xml` to the new version and make sure the `downloadurl` points to the matching GitHub release asset.
+For each release, update `updates/ra_tweaks.xml` to the new version and make sure the `downloadurl` points to the matching GitHub release asset.
 
 ## Useful Settings
 
