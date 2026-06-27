@@ -93,12 +93,20 @@ final class Walkchanged extends CMSPlugin implements SubscriberInterface
 			$changed = true;
 		}
 
+		$output = $body;
+
 		if ($changed) {
 			$output = $dom->saveHTML();
 
 			if (is_string($output)) {
-				$this->app->setBody($this->stripInjectedXmlDeclaration($output));
+				$output = $this->stripInjectedXmlDeclaration($output);
 			}
+		}
+
+		$output = $this->injectFrontendScript($output, $marker, $colour, $cancelTerms);
+
+		if ($changed || $output !== $body) {
+			$this->app->setBody($output);
 		}
 	}
 
@@ -292,5 +300,239 @@ final class Walkchanged extends CMSPlugin implements SubscriberInterface
 	private function stripInjectedXmlDeclaration(string $html): string
 	{
 		return preg_replace('/^<\?xml encoding="UTF-8"\?>\s*/', '', $html) ?? $html;
+	}
+
+	/**
+	 * Add a small browser-side pass for Ramblers programme pages that populate
+	 * walk rows after Joomla has rendered the article.
+	 *
+	 * @param string[] $cancelTerms
+	 */
+	private function injectFrontendScript(string $body, string $marker, string $colour, array $cancelTerms): string
+	{
+		if (str_contains($body, 'id="plg-system-walkchanged-script"')) {
+			return $body;
+		}
+
+		$config = json_encode(
+			[
+				'marker' => $marker,
+				'colour' => $colour,
+				'cancelTerms' => array_values($cancelTerms),
+			],
+			JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+		);
+
+		if (!is_string($config)) {
+			return $body;
+		}
+
+		$script = '<script id="plg-system-walkchanged-script">(' . $this->frontendScript() . ')(' . $config . ');</script>';
+
+		if (stripos($body, '</body>') !== false) {
+			return preg_replace('/<\/body>/i', $script . '</body>', $body, 1) ?? $body;
+		}
+
+		return $body . $script;
+	}
+
+	private function frontendScript(): string
+	{
+		return <<<'JS'
+function(config) {
+	"use strict";
+
+	var marker = config.marker || "***";
+	var colour = config.colour || "#F08050";
+	var cancelTerms = Array.isArray(config.cancelTerms) ? config.cancelTerms.map(function(term) {
+		return String(term).toLowerCase();
+	}) : ["cancelled", "canceled"];
+	var scheduled = false;
+
+	function closestContainer(node) {
+		var current = node && node.parentElement;
+
+		while (current && current !== document.body) {
+			var name = current.tagName.toLowerCase();
+
+			if (["li", "tr", "p", "article", "section", "div"].indexOf(name) !== -1) {
+				return current;
+			}
+
+			current = current.parentElement;
+		}
+
+		return node && node.parentElement ? node.parentElement : null;
+	}
+
+	function isIgnored(node) {
+		var current = node && node.parentElement;
+
+		while (current) {
+			var name = current.tagName.toLowerCase();
+
+			if (["script", "style", "textarea", "title"].indexOf(name) !== -1) {
+				return true;
+			}
+
+			current = current.parentElement;
+		}
+
+		return false;
+	}
+
+	function isCancelled(container) {
+		if (!container) {
+			return false;
+		}
+
+		if (container.closest(".cancelledWalks")) {
+			return true;
+		}
+
+		var text = (container.textContent || "").toLowerCase();
+
+		for (var i = 0; i < cancelTerms.length; i++) {
+			if (cancelTerms[i] && text.indexOf(cancelTerms[i]) !== -1) {
+				return true;
+			}
+		}
+
+		for (var current = container; current; current = current.parentElement) {
+			var style = (current.getAttribute("style") || "").toLowerCase();
+			var name = current.tagName.toLowerCase();
+
+			if (style.indexOf("line-through") !== -1 || name === "s" || name === "strike") {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	function topLevelNodeWithin(node, container) {
+		var current = node;
+
+		while (current && current.parentNode && current.parentNode !== container) {
+			current = current.parentNode;
+		}
+
+		return current;
+	}
+
+	function firstTextNode(node) {
+		var walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, {
+			acceptNode: function(textNode) {
+				return textNode.nodeValue.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+			}
+		});
+
+		return walker.nextNode();
+	}
+
+	function removeMarker(textNode) {
+		var escaped = marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+		textNode.nodeValue = textNode.nodeValue.replace(new RegExp("\\s*" + escaped + "\\s*"), " ");
+		textNode.nodeValue = textNode.nodeValue.replace(/\s{2,}/g, " ").replace(/^\s+/, "");
+	}
+
+	function prependMarker(container) {
+		var textNode = firstTextNode(container);
+
+		if (!textNode) {
+			container.insertBefore(document.createTextNode(marker + " "), container.firstChild);
+			return;
+		}
+
+		var value = textNode.nodeValue.replace(/^\s+/, "");
+
+		if (value.indexOf(marker) !== 0) {
+			textNode.nodeValue = marker + " " + value;
+		}
+	}
+
+	function colourElement(element) {
+		if (element.nodeType === Node.ELEMENT_NODE) {
+			element.style.color = colour;
+			return;
+		}
+
+		if (element.nodeType !== Node.TEXT_NODE || !element.nodeValue.trim()) {
+			return;
+		}
+
+		var span = document.createElement("span");
+		span.style.color = colour;
+		span.textContent = element.nodeValue;
+		element.parentNode.replaceChild(span, element);
+	}
+
+	function colourLeadingText(container, changedNode) {
+		var children = Array.prototype.slice.call(container.childNodes);
+
+		for (var i = 0; i < children.length; i++) {
+			colourElement(children[i]);
+
+			if (children[i] === changedNode) {
+				break;
+			}
+		}
+	}
+
+	function process() {
+		scheduled = false;
+
+		var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+			acceptNode: function(node) {
+				if (!node.nodeValue || node.nodeValue.indexOf(marker) === -1 || isIgnored(node)) {
+					return NodeFilter.FILTER_REJECT;
+				}
+
+				return NodeFilter.FILTER_ACCEPT;
+			}
+		});
+		var nodes = [];
+		var node;
+
+		while ((node = walker.nextNode())) {
+			nodes.push(node);
+		}
+
+		nodes.forEach(function(textNode) {
+			var container = closestContainer(textNode);
+
+			if (!container || isCancelled(container)) {
+				return;
+			}
+
+			var changedNode = topLevelNodeWithin(textNode, container);
+
+			removeMarker(textNode);
+			prependMarker(container);
+			colourLeadingText(container, changedNode);
+		});
+	}
+
+	function schedule() {
+		if (scheduled) {
+			return;
+		}
+
+		scheduled = true;
+		window.setTimeout(process, 50);
+	}
+
+	if (document.readyState === "loading") {
+		document.addEventListener("DOMContentLoaded", schedule);
+	} else {
+		schedule();
+	}
+
+	new MutationObserver(schedule).observe(document.documentElement, {
+		childList: true,
+		subtree: true
+	});
+}
+JS;
 	}
 }
