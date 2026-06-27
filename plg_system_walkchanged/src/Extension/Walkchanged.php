@@ -14,7 +14,7 @@ use Joomla\CMS\Plugin\CMSPlugin;
 use Joomla\Event\SubscriberInterface;
 
 /**
- * Colours changed Ramblers walk titles in the final rendered page output.
+ * Colours changed Ramblers walk items in the final rendered page output.
  */
 final class Walkchanged extends CMSPlugin implements SubscriberInterface
 {
@@ -49,13 +49,7 @@ final class Walkchanged extends CMSPlugin implements SubscriberInterface
 		}
 
 		$colour = $this->normaliseColour((string) $this->params->get('colour', '#F08050'));
-		$removeMarker = (bool) $this->params->get('remove_marker', 1);
-		$selectors = $this->normaliseList((string) $this->params->get('selectors', "a\nstrong\nb\n.walk-title\n.event-title\n.rwalk-title"));
 		$cancelTerms = $this->normaliseList((string) $this->params->get('cancel_terms', 'cancelled,canceled'));
-
-		if ($selectors === []) {
-			return;
-		}
 
 		$dom = new \DOMDocument('1.0', 'UTF-8');
 		$previous = libxml_use_internal_errors(true);
@@ -68,40 +62,35 @@ final class Walkchanged extends CMSPlugin implements SubscriberInterface
 		}
 
 		$xpath = new \DOMXPath($dom);
+		$textNodes = $xpath->query('//text()[contains(., ' . $this->xpathLiteral($marker) . ')]');
 		$changed = false;
 
-		foreach ($selectors as $selector) {
-			$query = $this->selectorToXPath($selector);
+		if (!$textNodes instanceof \DOMNodeList) {
+			return;
+		}
 
-			if ($query === null) {
+		foreach (iterator_to_array($textNodes) as $textNode) {
+			if (!$textNode instanceof \DOMText || !$textNode->parentNode instanceof \DOMElement) {
 				continue;
 			}
 
-			$nodes = $xpath->query($query);
-
-			if (!$nodes instanceof \DOMNodeList) {
+			if ($this->isIgnoredTextNode($textNode)) {
 				continue;
 			}
 
-			foreach ($nodes as $node) {
-				if (!$node instanceof \DOMElement) {
-					continue;
-				}
+			$container = $this->nearestContainer($textNode->parentNode);
 
-				$text = $node->textContent ?? '';
-
-				if ($text === '' || strpos($text, $marker) === false || $this->isCancelled($node, $cancelTerms)) {
-					continue;
-				}
-
-				$this->applyColour($node, $colour);
-
-				if ($removeMarker) {
-					$this->removeMarkerFromTextNodes($node, $marker);
-				}
-
-				$changed = true;
+			if ($this->isCancelled($container, $cancelTerms)) {
+				continue;
 			}
+
+			$changedNode = $this->topLevelNodeWithin($textNode, $container);
+
+			$this->removeMarkerFromTextNode($textNode, $marker);
+			$this->prependMarker($container, $marker);
+			$this->applyColourToLeadingWalkText($container, $changedNode, $colour);
+
+			$changed = true;
 		}
 
 		if ($changed) {
@@ -121,7 +110,7 @@ final class Walkchanged extends CMSPlugin implements SubscriberInterface
 			return $colour;
 		}
 
-			return '#F08050';
+		return '#F08050';
 	}
 
 	/**
@@ -136,34 +125,31 @@ final class Walkchanged extends CMSPlugin implements SubscriberInterface
 		return array_values(array_unique($items));
 	}
 
-	private function selectorToXPath(string $selector): ?string
+	private function xpathLiteral(string $value): string
 	{
-		$selector = trim($selector);
-
-		if ($selector === '') {
-			return null;
+		if (!str_contains($value, '"')) {
+			return '"' . $value . '"';
 		}
 
-		if ($selector[0] === '.') {
-			$class = substr($selector, 1);
-
-			if (!$this->isSafeCssIdentifier($class)) {
-				return null;
-			}
-
-			return "//*[contains(concat(' ', normalize-space(@class), ' '), ' " . $class . " ')]";
+		if (!str_contains($value, "'")) {
+			return "'" . $value . "'";
 		}
 
-		if (!$this->isSafeCssIdentifier($selector)) {
-			return null;
-		}
+		$parts = explode('"', $value);
+		$quoted = array_map(static fn ($part) => '"' . $part . '"', $parts);
 
-		return '//' . strtolower($selector);
+		return 'concat(' . implode(', \'"\', ', $quoted) . ')';
 	}
 
-	private function isSafeCssIdentifier(string $value): bool
+	private function isIgnoredTextNode(\DOMText $node): bool
 	{
-		return preg_match('/^[A-Za-z][A-Za-z0-9_-]*$/', $value) === 1;
+		for ($current = $node->parentNode; $current instanceof \DOMElement; $current = $current->parentNode) {
+			if (in_array(strtolower($current->nodeName), ['script', 'style', 'textarea', 'title'], true)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
@@ -198,12 +184,23 @@ final class Walkchanged extends CMSPlugin implements SubscriberInterface
 		for ($current = $node; $current instanceof \DOMElement; $current = $current->parentNode) {
 			$name = strtolower($current->nodeName);
 
-			if (in_array($name, ['li', 'tr', 'article', 'section', 'div'], true)) {
+			if (in_array($name, ['li', 'tr', 'p', 'article', 'section', 'div'], true)) {
 				return $current;
 			}
 		}
 
 		return $node;
+	}
+
+	private function topLevelNodeWithin(\DOMNode $node, \DOMElement $container): \DOMNode
+	{
+		$current = $node;
+
+		while ($current->parentNode instanceof \DOMNode && !$current->parentNode->isSameNode($container)) {
+			$current = $current->parentNode;
+		}
+
+		return $current;
 	}
 
 	private function applyColour(\DOMElement $node, string $colour): void
@@ -219,17 +216,77 @@ final class Walkchanged extends CMSPlugin implements SubscriberInterface
 		$node->setAttribute('style', $style . 'color: ' . $colour . ';');
 	}
 
-	private function removeMarkerFromTextNodes(\DOMNode $node, string $marker): void
+	private function removeMarkerFromTextNode(\DOMText $node, string $marker): void
 	{
-		if ($node instanceof \DOMText) {
-			$node->nodeValue = str_replace($marker, '', $node->nodeValue);
+		$node->nodeValue = preg_replace('/\s*' . preg_quote($marker, '/') . '\s*/', ' ', $node->nodeValue) ?? $node->nodeValue;
+		$node->nodeValue = preg_replace('/\s{2,}/', ' ', $node->nodeValue) ?? $node->nodeValue;
+		$node->nodeValue = ltrim($node->nodeValue);
+	}
+
+	private function prependMarker(\DOMElement $container, string $marker): void
+	{
+		$firstTextNode = $this->firstMeaningfulTextNode($container);
+
+		if ($firstTextNode instanceof \DOMText) {
+			$value = ltrim($firstTextNode->nodeValue);
+
+			if (!str_starts_with($value, $marker)) {
+				$firstTextNode->nodeValue = $marker . ' ' . $value;
+			}
 
 			return;
 		}
 
-		foreach (iterator_to_array($node->childNodes) as $child) {
-			$this->removeMarkerFromTextNodes($child, $marker);
+		$container->appendChild($container->ownerDocument->createTextNode($marker . ' '));
+	}
+
+	private function firstMeaningfulTextNode(\DOMNode $node): ?\DOMText
+	{
+		foreach ($node->childNodes as $child) {
+			if ($child instanceof \DOMText && trim($child->nodeValue) !== '') {
+				return $child;
+			}
+
+			if ($child instanceof \DOMElement && !in_array(strtolower($child->nodeName), ['script', 'style'], true)) {
+				$match = $this->firstMeaningfulTextNode($child);
+
+				if ($match instanceof \DOMText) {
+					return $match;
+				}
+			}
 		}
+
+		return null;
+	}
+
+	private function applyColourToLeadingWalkText(\DOMElement $container, \DOMNode $changedNode, string $colour): void
+	{
+		foreach (iterator_to_array($container->childNodes) as $child) {
+			$this->applyColourToNode($child, $colour);
+
+			if ($child->isSameNode($changedNode)) {
+				break;
+			}
+		}
+	}
+
+	private function applyColourToNode(\DOMNode $node, string $colour): void
+	{
+		if ($node instanceof \DOMElement) {
+			$this->applyColour($node, $colour);
+
+			return;
+		}
+
+		if (!$node instanceof \DOMText || trim($node->nodeValue) === '') {
+			return;
+		}
+
+		$span = $node->ownerDocument->createElement('span');
+		$span->setAttribute('style', 'color: ' . $colour . ';');
+		$span->appendChild($node->ownerDocument->createTextNode($node->nodeValue));
+
+		$node->parentNode?->replaceChild($span, $node);
 	}
 
 	private function stripInjectedXmlDeclaration(string $html): string

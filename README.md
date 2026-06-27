@@ -6,12 +6,12 @@ It highlights rendered Ramblers walk titles that contain a configurable marker s
 
 ## Behaviour
 
-- Looks at the final rendered site HTML.
-- Finds configured title elements containing the marker, defaulting to `***`.
+- Looks at the final rendered site HTML on any site page or article.
+- Finds rendered walk items containing the marker, defaulting to `***`.
+- Moves the marker to the start of the walk text, before the date.
 - Skips items whose nearby rendered text contains `cancelled` or `canceled`.
 - Also skips struck-through items.
-- Applies the configured colour to the matching title element.
-- Optionally removes the marker from the title after highlighting.
+- Applies the configured colour to the leading changed-walk text, including the date and title.
 
 ## Install
 
@@ -34,7 +34,5 @@ Then in Joomla:
 
 - **Changed marker**: `***`
 - **Highlight colour**: any hex colour, defaulting to the East Cheshire logo orange `#F08050`
-- **Remove marker from title**: Yes if you want visitors to see only the colour, not `***`
-- **Title selectors**: add the actual walk-title CSS class if your Ramblers output has one
 
-If the plugin colours too much or too little, inspect the rendered walk title HTML and add the most specific class selector to **Title selectors**.
+The marker remains visible because the website key uses it to denote changed walk details.
