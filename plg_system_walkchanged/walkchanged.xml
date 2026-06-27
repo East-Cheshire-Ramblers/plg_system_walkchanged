@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="plugin" group="system" method="upgrade">
+	<name>PLG_SYSTEM_WALKCHANGED</name>
+	<author>Codex</author>
+	<creationDate>2026-06-27</creationDate>
+	<copyright>Copyright (C) 2026. All rights reserved.</copyright>
+	<license>GNU General Public License version 2 or later</license>
+	<version>1.0.0</version>
+	<description>PLG_SYSTEM_WALKCHANGED_XML_DESCRIPTION</description>
+	<namespace path="src">Ramblerseastcheshire\Plugin\System\Walkchanged</namespace>
+	<files>
+		<folder plugin="walkchanged">services</folder>
+		<folder>src</folder>
+		<folder>language</folder>
+	</files>
+	<languages>
+		<language tag="en-GB">language/en-GB/plg_system_walkchanged.ini</language>
+		<language tag="en-GB">language/en-GB/plg_system_walkchanged.sys.ini</language>
+	</languages>
+	<config>
+		<fields name="params">
+			<fieldset name="basic">
+				<field
+					name="marker"
+					type="text"
+					label="PLG_SYSTEM_WALKCHANGED_FIELD_MARKER_LABEL"
+					description="PLG_SYSTEM_WALKCHANGED_FIELD_MARKER_DESC"
+					default="***"
+				/>
+				<field
+					name="colour"
+					type="color"
+					label="PLG_SYSTEM_WALKCHANGED_FIELD_COLOUR_LABEL"
+					description="PLG_SYSTEM_WALKCHANGED_FIELD_COLOUR_DESC"
+					default="#F08050"
+				/>
+				<field
+					name="remove_marker"
+					type="radio"
+					label="PLG_SYSTEM_WALKCHANGED_FIELD_REMOVE_MARKER_LABEL"
+					description="PLG_SYSTEM_WALKCHANGED_FIELD_REMOVE_MARKER_DESC"
+					default="1"
+					layout="joomla.form.field.radio.switcher"
+					>
+					<option value="0">JNO</option>
+					<option value="1">JYES</option>
+				</field>
+				<field
+					name="selectors"
+					type="textarea"
+					label="PLG_SYSTEM_WALKCHANGED_FIELD_SELECTORS_LABEL"
+					description="PLG_SYSTEM_WALKCHANGED_FIELD_SELECTORS_DESC"
+					default="a&#10;strong&#10;b&#10;.walk-title&#10;.event-title&#10;.rwalk-title"
+					rows="6"
+				/>
+				<field
+					name="cancel_terms"
+					type="text"
+					label="PLG_SYSTEM_WALKCHANGED_FIELD_CANCEL_TERMS_LABEL"
+					description="PLG_SYSTEM_WALKCHANGED_FIELD_CANCEL_TERMS_DESC"
+					default="cancelled,canceled"
+				/>
+			</fieldset>
+		</fields>
+	</config>
+</extension>
