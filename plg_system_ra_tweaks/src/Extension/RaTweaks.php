@@ -173,7 +173,7 @@ final class RaTweaks extends CMSPlugin implements SubscriberInterface
 			'title'   => 'RA Tweaks',
 			'type'    => 'component',
 			'element' => 'com_plugins',
-			'link'    => 'index.php?option=com_plugins&view=plugin&layout=edit&extension_id=' . $extensionId,
+			'link'    => 'index.php?option=com_plugins&task=plugin.edit&extension_id=' . $extensionId,
 			'class'   => 'class:sliders-h',
 		]);
 	}
@@ -206,7 +206,7 @@ final class RaTweaks extends CMSPlugin implements SubscriberInterface
 
 		return $extensionId === null
 			? ''
-			: 'index.php?option=com_plugins&view=plugin&layout=edit&extension_id=' . $extensionId;
+			: 'index.php?option=com_plugins&task=plugin.edit&extension_id=' . $extensionId;
 	}
 
 	public function onAfterRender(): void
