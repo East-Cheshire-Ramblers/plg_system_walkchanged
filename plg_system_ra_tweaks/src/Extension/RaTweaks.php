@@ -65,13 +65,13 @@ final class RaTweaks extends CMSPlugin implements SubscriberInterface
 			return;
 		}
 
-		$menuItems[] = new AdministratorMenuItem([
-			'title'   => 'RA Tweaks',
-			'type'    => 'component',
-			'element' => 'com_plugins',
-			'link'    => 'index.php?option=com_plugins&view=plugin&layout=edit&extension_id=' . $extensionId,
-			'class'   => 'class:sliders-h',
-		]);
+		$componentsMenu = $this->componentsMenuItem($menuItems);
+
+		if (!$componentsMenu instanceof AdministratorMenuItem) {
+			return;
+		}
+
+		$componentsMenu->addChild($this->raTweaksMenuItem($extensionId));
 
 		if (is_object($eventOrContext) && method_exists($eventOrContext, 'updateItems')) {
 			$eventOrContext->updateItems($menuItems);
@@ -144,9 +144,38 @@ final class RaTweaks extends CMSPlugin implements SubscriberInterface
 			if (($item->link ?? '') === $this->raTweaksMenuLink()) {
 				return true;
 			}
+
+			if ($item->hasChildren() && $this->hasRaTweaksMenuItem($item->getChildren())) {
+				return true;
+			}
 		}
 
 		return false;
+	}
+
+	/**
+	 * @param AdministratorMenuItem[] $items
+	 */
+	private function componentsMenuItem(array $items): ?AdministratorMenuItem
+	{
+		foreach ($items as $item) {
+			if (($item->type ?? '') === 'container' && ($item->title ?? '') === 'MOD_MENU_COMPONENTS') {
+				return $item;
+			}
+		}
+
+		return null;
+	}
+
+	private function raTweaksMenuItem(int $extensionId): AdministratorMenuItem
+	{
+		return new AdministratorMenuItem([
+			'title'   => 'RA Tweaks',
+			'type'    => 'component',
+			'element' => 'com_plugins',
+			'link'    => 'index.php?option=com_plugins&view=plugin&layout=edit&extension_id=' . $extensionId,
+			'class'   => 'class:sliders-h',
+		]);
 	}
 
 	private function getExtensionId(): ?int

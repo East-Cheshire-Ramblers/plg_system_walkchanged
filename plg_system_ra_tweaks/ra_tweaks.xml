@@ -7,7 +7,7 @@
 	<license>GNU General Public License version 3 or later; see LICENSE.txt</license>
 	<authorEmail>webmaster@bigley.me.uk</authorEmail>
 	<authorUrl>https://ramblerseastcheshire.org.uk/</authorUrl>
-	<version>1.1.6</version>
+	<version>1.1.7</version>
 	<description>PLG_SYSTEM_RA_TWEAKS_XML_DESCRIPTION</description>
 	<namespace path="src">Ramblerseastcheshire\Plugin\System\RaTweaks</namespace>
 	<files>

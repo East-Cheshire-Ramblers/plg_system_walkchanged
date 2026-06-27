@@ -16,7 +16,7 @@ The first tweak highlights rendered Ramblers walk titles that contain a configur
 - Also skips struck-through items.
 - Applies the configured colour to the leading changed-walk text, including the date and title.
 - Colours the programme-page changed-walk row text after the grade icon, including date, title, distance, and contact.
-- Adds an **RA Tweaks** administrator menu item that opens this plugin's settings.
+- Adds an **RA Tweaks** administrator menu item under **Components** that opens this plugin's settings.
 
 ## Install
 
@@ -24,13 +24,13 @@ Zip the contents of `plg_system_ra_tweaks` and install the zip in Joomla:
 
 ```sh
 cd plg_system_ra_tweaks
-zip -r ../ra_tweaks-1.1.6.zip .
+zip -r ../ra_tweaks-1.1.7.zip .
 ```
 
 Then in Joomla:
 
 1. Go to **System > Install > Extensions**.
-2. Upload `ra_tweaks-1.1.6.zip`.
+2. Upload `ra_tweaks-1.1.7.zip`.
 3. Go to **System > Manage > Plugins**.
 4. Enable **System - RA Tweaks**.
 5. Configure the marker and colour.
