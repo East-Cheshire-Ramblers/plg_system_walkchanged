@@ -12,6 +12,7 @@
 		<downloads>
 			<downloadurl type="full" format="zip">https://github.com/East-Cheshire-Ramblers/ra_tweaks/releases/download/v1.1.6/ra_tweaks-1.1.6.zip</downloadurl>
 		</downloads>
+		<sha256>6fc21fb80aaca275d19161ad11a33fc3be1e9966089a14ba08c100cfcf4f6f1f</sha256>
 		<tags>
 			<tag>stable</tag>
 		</tags>
