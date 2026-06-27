@@ -2,7 +2,7 @@
 
 /**
  * @package     Joomla.Plugin
- * @subpackage  System.walkchanged
+ * @subpackage  System.ra_tweaks
  */
 
 \defined('_JEXEC') or die;
@@ -13,7 +13,7 @@ use Joomla\CMS\Plugin\PluginHelper;
 use Joomla\DI\Container;
 use Joomla\DI\ServiceProviderInterface;
 use Joomla\Event\DispatcherInterface;
-use Ramblerseastcheshire\Plugin\System\Walkchanged\Extension\Walkchanged;
+use Ramblerseastcheshire\Plugin\System\RaTweaks\Extension\RaTweaks;
 
 return new class () implements ServiceProviderInterface {
 	public function register(Container $container): void
@@ -21,9 +21,9 @@ return new class () implements ServiceProviderInterface {
 		$container->set(
 			PluginInterface::class,
 			static function (Container $container): PluginInterface {
-				$plugin = new Walkchanged(
+				$plugin = new RaTweaks(
 					$container->get(DispatcherInterface::class),
-					(array) PluginHelper::getPlugin('system', 'walkchanged')
+					(array) PluginHelper::getPlugin('system', 'ra_tweaks')
 				);
 
 				$plugin->setApplication(Factory::getApplication());
