@@ -1,8 +1,6 @@
-# Walk Changed Joomla Plugin
+# plg_system_walkchanged
 
-This workspace contains an installable Joomla system plugin:
-
-`plg_system_walkchanged`
+A simple Joomla system plugin to configure changing the look of an edited walk.
 
 It highlights rendered Ramblers walk titles that contain a configurable marker such as `***`, while skipping cancelled walks.
 
