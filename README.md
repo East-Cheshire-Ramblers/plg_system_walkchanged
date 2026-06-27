@@ -11,6 +11,7 @@ It highlights rendered Ramblers walk titles that contain a configurable marker s
 - Avoids fragile browser regex escaping so Joomla optimization plugins can safely process the script.
 - Finds rendered walk items containing the marker, defaulting to `***`.
 - Moves the marker to the start of the walk text, before the date.
+- Renders the marker as a small circular badge using the configured colour and white marker text.
 - Skips items whose nearby rendered text contains `cancelled` or `canceled`.
 - Also skips struck-through items.
 - Applies the configured colour to the leading changed-walk text, including the date and title.
