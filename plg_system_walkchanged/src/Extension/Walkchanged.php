@@ -284,10 +284,10 @@ final class Walkchanged extends CMSPlugin implements SubscriberInterface
 
 	private function markerBadgeStyle(string $colour): string
 	{
-		return 'display: inline-flex; align-items: center; justify-content: center; '
+		return 'display: inline-grid; place-items: center; '
 			. 'width: 1.45em; height: 1.45em; margin-right: 0.3em; border-radius: 999px; '
 			. 'background: ' . $colour . '; color: #fff; font-size: 0.72em; font-weight: 800; '
-			. 'line-height: 1; vertical-align: 0.12em;';
+			. 'line-height: 1; vertical-align: 0.12em; padding-top: 0.12em; box-sizing: border-box;';
 	}
 
 	private function firstMeaningfulTextNode(\DOMNode $node): ?\DOMText
@@ -511,9 +511,8 @@ function(config) {
 		badge.setAttribute("data-walkchanged-marker", "1");
 		badge.setAttribute("title", "Walk details changed");
 		badge.setAttribute("aria-label", "Walk details changed");
-		badge.style.display = "inline-flex";
-		badge.style.alignItems = "center";
-		badge.style.justifyContent = "center";
+		badge.style.display = "inline-grid";
+		badge.style.placeItems = "center";
 		badge.style.width = "1.45em";
 		badge.style.height = "1.45em";
 		badge.style.marginRight = "0.3em";
@@ -524,6 +523,8 @@ function(config) {
 		badge.style.fontWeight = "800";
 		badge.style.lineHeight = "1";
 		badge.style.verticalAlign = "0.12em";
+		badge.style.paddingTop = "0.12em";
+		badge.style.boxSizing = "border-box";
 		badge.textContent = marker;
 
 		return badge;
