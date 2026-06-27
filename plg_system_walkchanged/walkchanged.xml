@@ -17,6 +17,9 @@
 		<language tag="en-GB">language/en-GB/plg_system_walkchanged.ini</language>
 		<language tag="en-GB">language/en-GB/plg_system_walkchanged.sys.ini</language>
 	</languages>
+	<updateservers>
+		<server type="extension" priority="1" name="East Cheshire Ramblers Walk Changed Updates">https://raw.githubusercontent.com/East-Cheshire-Ramblers/plg_system_walkchanged/main/updates.xml</server>
+	</updateservers>
 	<config>
 		<fields name="params">
 			<fieldset name="basic">

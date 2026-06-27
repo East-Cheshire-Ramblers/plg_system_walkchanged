@@ -34,6 +34,14 @@ Then in Joomla:
 4. Enable **System - Walk Changed Highlighter**.
 5. Configure the marker and colour.
 
+## Updates
+
+The plugin manifest registers a Joomla update server:
+
+`https://raw.githubusercontent.com/East-Cheshire-Ramblers/plg_system_walkchanged/main/updates.xml`
+
+For each release, update `updates.xml` to the new version and make sure the `downloadurl` points to the matching GitHub release asset.
+
 ## Useful Settings
 
 - **Changed marker**: `***`
