@@ -43,13 +43,22 @@ final class Walkchanged extends CMSPlugin implements SubscriberInterface
 		}
 
 		$marker = (string) $this->params->get('marker', '***');
+		$colour = $this->normaliseColour((string) $this->params->get('colour', '#F08050'));
+		$cancelTerms = $this->normaliseList((string) $this->params->get('cancel_terms', 'cancelled,canceled'));
 
-		if ($marker === '' || strpos($body, $marker) === false) {
+		if ($marker === '') {
 			return;
 		}
 
-		$colour = $this->normaliseColour((string) $this->params->get('colour', '#F08050'));
-		$cancelTerms = $this->normaliseList((string) $this->params->get('cancel_terms', 'cancelled,canceled'));
+		if (strpos($body, $marker) === false) {
+			$output = $this->injectFrontendScript($body, $marker, $colour, $cancelTerms);
+
+			if ($output !== $body) {
+				$this->app->setBody($output);
+			}
+
+			return;
+		}
 
 		$dom = new \DOMDocument('1.0', 'UTF-8');
 		$previous = libxml_use_internal_errors(true);
@@ -371,6 +380,10 @@ function(config) {
 		while (current) {
 			var name = current.tagName.toLowerCase();
 
+			if (current.getAttribute("data-walkchanged-processed") === "1") {
+				return true;
+			}
+
 			if (["script", "style", "textarea", "title"].indexOf(name) !== -1) {
 				return true;
 			}
@@ -479,8 +492,53 @@ function(config) {
 		}
 	}
 
+	function firstElementContainingMarker(container) {
+		var elements = Array.prototype.slice.call(container.querySelectorAll("*"));
+
+		for (var i = 0; i < elements.length; i++) {
+			if ((elements[i].textContent || "").indexOf(marker) !== -1) {
+				return elements[i];
+			}
+		}
+
+		return null;
+	}
+
+	function processElement(container) {
+		if (!container || isCancelled(container) || container.getAttribute("data-walkchanged-processed") === "1") {
+			return;
+		}
+
+		if ((container.textContent || "").indexOf(marker) === -1) {
+			return;
+		}
+
+		var markerElement = firstElementContainingMarker(container);
+
+		if (!markerElement) {
+			return;
+		}
+
+		var textNodes = Array.prototype.slice.call(markerElement.childNodes).filter(function(child) {
+			return child.nodeType === Node.TEXT_NODE && child.nodeValue.indexOf(marker) !== -1;
+		});
+
+		if (textNodes.length) {
+			removeMarker(textNodes[0]);
+		}
+
+		prependMarker(container);
+		colourLeadingText(container, markerElement);
+		container.setAttribute("data-walkchanged-processed", "1");
+	}
+
 	function process() {
 		scheduled = false;
+		Array.prototype.slice.call(document.querySelectorAll(".walkPublished .pointer, .walkdetail .pointer")).forEach(processElement);
+
+		if (typeof document.createTreeWalker !== "function") {
+			return;
+		}
 
 		var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
 			acceptNode: function(node) {

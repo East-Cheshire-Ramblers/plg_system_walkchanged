@@ -7,7 +7,7 @@ It highlights rendered Ramblers walk titles that contain a configurable marker s
 ## Behaviour
 
 - Looks at the final rendered site HTML on any site page or article.
-- Adds a browser-side pass for programme pages that populate walks after page load.
+- Always loads a browser-side pass for programme pages that populate walks after page load.
 - Finds rendered walk items containing the marker, defaulting to `***`.
 - Moves the marker to the start of the walk text, before the date.
 - Skips items whose nearby rendered text contains `cancelled` or `canceled`.
