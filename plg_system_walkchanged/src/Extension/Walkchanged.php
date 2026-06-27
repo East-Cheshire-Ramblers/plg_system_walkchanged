@@ -495,6 +495,19 @@ function(config) {
 		}
 	}
 
+	function colourProgrammeTitle(container) {
+		var boldParts = Array.prototype.slice.call(container.querySelectorAll("b"));
+
+		if (boldParts.length < 2) {
+			return false;
+		}
+
+		colourElement(boldParts[0]);
+		colourElement(boldParts[1]);
+
+		return true;
+	}
+
 	function firstElementContainingMarker(container) {
 		var elements = Array.prototype.slice.call(container.querySelectorAll("*"));
 
@@ -531,7 +544,11 @@ function(config) {
 		}
 
 		prependMarker(container);
-		colourLeadingText(container, markerElement);
+
+		if (!colourProgrammeTitle(container)) {
+			colourLeadingText(container, markerElement);
+		}
+
 		container.setAttribute("data-walkchanged-processed", "1");
 	}
 
