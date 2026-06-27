@@ -14,6 +14,7 @@ It highlights rendered Ramblers walk titles that contain a configurable marker s
 - Skips items whose nearby rendered text contains `cancelled` or `canceled`.
 - Also skips struck-through items.
 - Applies the configured colour to the leading changed-walk text, including the date and title.
+- Forces that colour through nested programme-page title markup so the whole title changes colour.
 
 ## Install
 

@@ -466,6 +466,10 @@ function(config) {
 	function colourElement(element) {
 		if (element.nodeType === Node.ELEMENT_NODE) {
 			element.style.color = colour;
+			Array.prototype.slice.call(element.querySelectorAll("*")).forEach(function(child) {
+				child.style.color = colour;
+			});
+
 			return;
 		}
 
