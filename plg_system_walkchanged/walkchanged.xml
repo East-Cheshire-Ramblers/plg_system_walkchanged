@@ -5,7 +5,7 @@
 	<creationDate>2026-06-27</creationDate>
 	<copyright>Copyright (C) 2026. All rights reserved.</copyright>
 	<license>GNU General Public License version 2 or later</license>
-	<version>1.1.4</version>
+	<version>1.1.5</version>
 	<description>PLG_SYSTEM_WALKCHANGED_XML_DESCRIPTION</description>
 	<namespace path="src">Ramblerseastcheshire\Plugin\System\Walkchanged</namespace>
 	<files>
@@ -17,6 +17,9 @@
 		<language tag="en-GB">language/en-GB/plg_system_walkchanged.ini</language>
 		<language tag="en-GB">language/en-GB/plg_system_walkchanged.sys.ini</language>
 	</languages>
+	<updateservers>
+		<server type="extension" priority="1" name="East Cheshire Ramblers Walk Changed Updates">https://raw.githubusercontent.com/East-Cheshire-Ramblers/plg_system_walkchanged/main/updates.xml</server>
+	</updateservers>
 	<config>
 		<fields name="params">
 			<fieldset name="basic">

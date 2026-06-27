@@ -96,7 +96,7 @@ final class Walkchanged extends CMSPlugin implements SubscriberInterface
 			$changedNode = $this->topLevelNodeWithin($textNode, $container);
 
 			$this->removeMarkerFromTextNode($textNode, $marker);
-			$this->prependMarker($container, $marker);
+			$this->prependMarker($container, $marker, $colour);
 			$this->applyColourToLeadingWalkText($container, $changedNode, $colour);
 
 			$changed = true;
@@ -240,21 +240,54 @@ final class Walkchanged extends CMSPlugin implements SubscriberInterface
 		$node->nodeValue = ltrim($node->nodeValue);
 	}
 
-	private function prependMarker(\DOMElement $container, string $marker): void
+	private function prependMarker(\DOMElement $container, string $marker, string $colour): void
 	{
+		if ($this->hasMarkerBadge($container)) {
+			return;
+		}
+
 		$firstTextNode = $this->firstMeaningfulTextNode($container);
+		$badge = $this->createMarkerBadge($container->ownerDocument, $marker, $colour);
 
 		if ($firstTextNode instanceof \DOMText) {
-			$value = ltrim($firstTextNode->nodeValue);
-
-			if (!str_starts_with($value, $marker)) {
-				$firstTextNode->nodeValue = $marker . ' ' . $value;
-			}
+			$firstTextNode->nodeValue = ltrim($firstTextNode->nodeValue);
+			$firstTextNode->parentNode?->insertBefore($badge, $firstTextNode);
 
 			return;
 		}
 
-		$container->appendChild($container->ownerDocument->createTextNode($marker . ' '));
+		$container->insertBefore($badge, $container->firstChild);
+	}
+
+	private function hasMarkerBadge(\DOMElement $container): bool
+	{
+		foreach ($container->getElementsByTagName('span') as $span) {
+			if ($span instanceof \DOMElement && $span->getAttribute('data-walkchanged-marker') === '1') {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private function createMarkerBadge(\DOMDocument $document, string $marker, string $colour): \DOMElement
+	{
+		$badge = $document->createElement('span');
+		$badge->setAttribute('data-walkchanged-marker', '1');
+		$badge->setAttribute('title', 'Walk details changed');
+		$badge->setAttribute('aria-label', 'Walk details changed');
+		$badge->setAttribute('style', $this->markerBadgeStyle($colour));
+		$badge->appendChild($document->createTextNode($marker));
+
+		return $badge;
+	}
+
+	private function markerBadgeStyle(string $colour): string
+	{
+		return 'display: inline-grid; place-items: center; '
+			. 'width: 1.45em; height: 1.45em; margin-right: 0.3em; border-radius: 999px; '
+			. 'background: ' . $colour . '; color: #fff; font-size: 0.72em; font-weight: 800; '
+			. 'line-height: 1; vertical-align: 0.12em; padding-top: 0.12em; box-sizing: border-box;';
 	}
 
 	private function firstMeaningfulTextNode(\DOMNode $node): ?\DOMText
@@ -290,6 +323,10 @@ final class Walkchanged extends CMSPlugin implements SubscriberInterface
 	private function applyColourToNode(\DOMNode $node, string $colour): void
 	{
 		if ($node instanceof \DOMElement) {
+			if ($node->getAttribute('data-walkchanged-marker') === '1') {
+				return;
+			}
+
 			$this->applyColour($node, $colour);
 
 			return;
@@ -384,6 +421,10 @@ function(config) {
 				return true;
 			}
 
+			if (current.getAttribute("data-walkchanged-marker") === "1") {
+				return true;
+			}
+
 			if (["script", "style", "textarea", "title"].indexOf(name) !== -1) {
 				return true;
 			}
@@ -449,24 +490,58 @@ function(config) {
 	}
 
 	function prependMarker(container) {
-		var textNode = firstTextNode(container);
-
-		if (!textNode) {
-			container.insertBefore(document.createTextNode(marker + " "), container.firstChild);
+		if (container.querySelector("[data-walkchanged-marker='1']")) {
 			return;
 		}
 
-		var value = textNode.nodeValue.replace(/^\s+/, "");
+		var textNode = firstTextNode(container);
+		var badge = createMarkerBadge();
 
-		if (value.indexOf(marker) !== 0) {
-			textNode.nodeValue = marker + " " + value;
+		if (!textNode) {
+			container.insertBefore(badge, container.firstChild);
+			return;
 		}
+
+		textNode.nodeValue = textNode.nodeValue.replace(/^\s+/, "");
+		textNode.parentNode.insertBefore(badge, textNode);
+	}
+
+	function createMarkerBadge() {
+		var badge = document.createElement("span");
+		badge.setAttribute("data-walkchanged-marker", "1");
+		badge.setAttribute("title", "Walk details changed");
+		badge.setAttribute("aria-label", "Walk details changed");
+		badge.style.display = "inline-grid";
+		badge.style.placeItems = "center";
+		badge.style.width = "1.45em";
+		badge.style.height = "1.45em";
+		badge.style.marginRight = "0.3em";
+		badge.style.borderRadius = "999px";
+		badge.style.background = colour;
+		badge.style.color = "#fff";
+		badge.style.fontSize = "0.72em";
+		badge.style.fontWeight = "800";
+		badge.style.lineHeight = "1";
+		badge.style.verticalAlign = "0.12em";
+		badge.style.paddingTop = "0.12em";
+		badge.style.boxSizing = "border-box";
+		badge.textContent = marker;
+
+		return badge;
 	}
 
 	function colourElement(element) {
 		if (element.nodeType === Node.ELEMENT_NODE) {
+			if (element.getAttribute("data-walkchanged-marker") === "1") {
+				return;
+			}
+
 			element.style.color = colour;
 			Array.prototype.slice.call(element.querySelectorAll("*")).forEach(function(child) {
+				if (child.getAttribute("data-walkchanged-marker") === "1") {
+					return;
+				}
+
 				child.style.color = colour;
 			});
 
