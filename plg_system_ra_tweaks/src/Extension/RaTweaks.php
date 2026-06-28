@@ -576,7 +576,13 @@ final class RaTweaks extends CMSPlugin implements SubscriberInterface
 	{
 		return <<<'CSS'
 .walkPublished > .item,
-.walkdetail > .item {
+.walkdetail > .item,
+.walkPublished > .updated,
+.walkPublished > .new,
+.walkdetail > .updated,
+.walkdetail > .new,
+.walkPublished:has(> .grade),
+.walkdetail:has(> .grade) {
 	display: grid !important;
 	grid-template-columns: max-content minmax(0, 1fr) !important;
 	column-gap: 0.65em !important;
@@ -594,7 +600,13 @@ final class RaTweaks extends CMSPlugin implements SubscriberInterface
 	display: contents !important;
 }
 .walkPublished > .item .grade,
-.walkdetail > .item .grade {
+.walkdetail > .item .grade,
+.walkPublished > .updated > .grade,
+.walkPublished > .new > .grade,
+.walkdetail > .updated > .grade,
+.walkdetail > .new > .grade,
+.walkPublished > .grade,
+.walkdetail > .grade {
 	grid-column: 1 !important;
 	grid-row: 1 !important;
 	justify-self: center !important;
@@ -608,14 +620,26 @@ final class RaTweaks extends CMSPlugin implements SubscriberInterface
 	margin: 0 !important;
 }
 .walkPublished > .item .grade img,
-.walkdetail > .item .grade img {
+.walkdetail > .item .grade img,
+.walkPublished > .updated > .grade img,
+.walkPublished > .new > .grade img,
+.walkdetail > .updated > .grade img,
+.walkdetail > .new > .grade img,
+.walkPublished > .grade img,
+.walkdetail > .grade img {
 	display: block !important;
 	float: none !important;
 	margin: 0 auto !important;
 	max-width: none !important;
 }
 .walkPublished > .item .pointer,
-.walkdetail > .item .pointer {
+.walkdetail > .item .pointer,
+.walkPublished > .updated > .pointer,
+.walkPublished > .new > .pointer,
+.walkdetail > .updated > .pointer,
+.walkdetail > .new > .pointer,
+.walkPublished > .pointer,
+.walkdetail > .pointer {
 	grid-column: 2 !important;
 	grid-row: 1 !important;
 	min-width: 0 !important;
@@ -835,7 +859,7 @@ function(config) {
 	}
 
 	function programmeItems() {
-		return Array.prototype.slice.call(document.querySelectorAll(".walkPublished > .item, .walkdetail > .item"));
+		return Array.prototype.slice.call(document.querySelectorAll(".walkPublished > .item, .walkdetail > .item, .walkPublished > .updated, .walkPublished > .new, .walkdetail > .updated, .walkdetail > .new, .walkPublished, .walkdetail"));
 	}
 
 	function mediaElement(element) {
@@ -1053,7 +1077,13 @@ function(config) {
 		var grade = item.querySelector(":scope > .grade");
 
 		if (!pointer || !grade) {
-			wrapper = item.querySelector(":scope > .updated, :scope > .new") || item;
+			wrapper = item.querySelector(":scope > .item, :scope > .updated, :scope > .new") || item;
+			pointer = wrapper.querySelector(":scope > .pointer");
+			grade = wrapper.querySelector(":scope > .grade");
+		}
+
+		if ((!pointer || !grade) && wrapper !== item) {
+			wrapper = wrapper.querySelector(":scope > .updated, :scope > .new") || wrapper;
 			pointer = wrapper.querySelector(":scope > .pointer");
 			grade = wrapper.querySelector(":scope > .grade");
 		}
