@@ -25,13 +25,13 @@ Zip the contents of `plg_system_ra_tweaks` and install the zip in Joomla:
 
 ```sh
 cd plg_system_ra_tweaks
-zip -r ../ra_tweaks-1.1.13.zip .
+zip -r ../ra_tweaks-1.1.14.zip .
 ```
 
 Then in Joomla:
 
 1. Go to **System > Install > Extensions**.
-2. Upload `ra_tweaks-1.1.13.zip`.
+2. Upload `ra_tweaks-1.1.14.zip`.
 3. Go to **System > Manage > Plugins**.
 4. Enable **System - RA Tweaks**.
 5. Configure the marker and colour.

@@ -562,13 +562,70 @@ final class RaTweaks extends CMSPlugin implements SubscriberInterface
 			return $body;
 		}
 
-		$script = '<script id="plg-system-ra_tweaks-script">(' . $this->frontendScript() . ')(' . $config . ');</script>';
+		$style = $alignGradeIcons ? '<style id="plg-system-ra_tweaks-style">' . $this->frontendStyle() . '</style>' : '';
+		$script = $style . '<script id="plg-system-ra_tweaks-script">(' . $this->frontendScript() . ')(' . $config . ');</script>';
 
 		if (stripos($body, '</body>') !== false) {
 			return preg_replace('/<\/body>/i', $script . '</body>', $body, 1) ?? $body;
 		}
 
 		return $body . $script;
+	}
+
+	private function frontendStyle(): string
+	{
+		return <<<'CSS'
+.walkPublished > .item,
+.walkdetail > .item {
+	display: grid !important;
+	grid-template-columns: max-content minmax(0, 1fr) !important;
+	column-gap: 0.65em !important;
+	align-items: center !important;
+	width: 100% !important;
+	max-width: 100% !important;
+	clear: both !important;
+	box-sizing: border-box !important;
+	margin-bottom: 0.35em !important;
+}
+.walkPublished > .item > .updated,
+.walkPublished > .item > .new,
+.walkdetail > .item > .updated,
+.walkdetail > .item > .new {
+	display: contents !important;
+}
+.walkPublished > .item .grade,
+.walkdetail > .item .grade {
+	grid-column: 1 !important;
+	grid-row: 1 !important;
+	justify-self: center !important;
+	align-self: center !important;
+	float: none !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	width: max-content !important;
+	max-width: none !important;
+	margin: 0 !important;
+}
+.walkPublished > .item .grade img,
+.walkdetail > .item .grade img {
+	display: block !important;
+	float: none !important;
+	margin: 0 auto !important;
+	max-width: none !important;
+}
+.walkPublished > .item .pointer,
+.walkdetail > .item .pointer {
+	grid-column: 2 !important;
+	grid-row: 1 !important;
+	min-width: 0 !important;
+	display: block !important;
+	float: none !important;
+	width: auto !important;
+	max-width: 100% !important;
+	white-space: normal !important;
+}
+CSS;
 	}
 
 	private function frontendScript(): string
