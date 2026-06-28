@@ -777,6 +777,10 @@ function(config) {
 		return Array.prototype.slice.call(document.querySelectorAll(".walkPublished .pointer, .walkdetail .pointer"));
 	}
 
+	function programmeItems() {
+		return Array.prototype.slice.call(document.querySelectorAll(".walkPublished > .item, .walkdetail > .item"));
+	}
+
 	function mediaElement(element) {
 		if (!element || element.nodeType !== Node.ELEMENT_NODE) {
 			return null;
@@ -951,6 +955,30 @@ function(config) {
 		container.setAttribute("data-ra_tweaks-grade-aligned", "1");
 	}
 
+	function alignProgrammeItem(item) {
+		if (!alignGradeIcons || !item || item.getAttribute("data-ra_tweaks-grade-aligned") === "1") {
+			return;
+		}
+
+		var wrapper = item;
+		var pointer = item.querySelector(":scope > .pointer");
+		var grade = item.querySelector(":scope > .grade");
+
+		if (!pointer || !grade) {
+			wrapper = item.querySelector(":scope > .updated, :scope > .new") || item;
+			pointer = wrapper.querySelector(":scope > .pointer");
+			grade = wrapper.querySelector(":scope > .grade");
+		}
+
+		if (!pointer || !grade || !/\b(mi|km)\b/i.test(pointer.textContent || "")) {
+			return;
+		}
+
+		applyGradeRowLayout(wrapper, grade, pointer);
+		wrapper.setAttribute("data-ra_tweaks-grade-aligned", "1");
+		item.setAttribute("data-ra_tweaks-grade-aligned", "1");
+	}
+
 	function trimTrailingBreak(textWrap) {
 		while (textWrap.lastChild && textWrap.lastChild.nodeType === Node.ELEMENT_NODE && textWrap.lastChild.tagName.toLowerCase() === "br") {
 			textWrap.removeChild(textWrap.lastChild);
@@ -1037,6 +1065,7 @@ function(config) {
 
 	function process() {
 		scheduled = false;
+		programmeItems().forEach(alignProgrammeItem);
 		programmeRows().forEach(function(container) {
 			alignGradeIcon(container);
 			processElement(container);
