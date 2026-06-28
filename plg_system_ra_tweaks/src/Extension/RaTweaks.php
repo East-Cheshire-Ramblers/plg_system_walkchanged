@@ -831,8 +831,62 @@ function(config) {
 		return true;
 	}
 
+	function inlineGradeIconChildren(parent) {
+		if (!parent) {
+			return [];
+		}
+
+		return Array.prototype.slice.call(parent.children).filter(gradeIconCandidate);
+	}
+
+	function inlineGradeParentCandidate(parent) {
+		if (!parent || parent.getAttribute("data-ra_tweaks-inline-grade-aligned") === "1") {
+			return false;
+		}
+
+		var name = parent.tagName.toLowerCase();
+
+		if (["p", "div", "span"].indexOf(name) === -1) {
+			return false;
+		}
+
+		if (parent.closest("table, thead, tbody, tfoot, tr, td, th, ul, ol, .walkPublished, .walkdetail")) {
+			return false;
+		}
+
+		if (parent.querySelector("table, ul, ol, .walkPublished, .walkdetail")) {
+			return false;
+		}
+
+		if (!/\b(mi|km)\b/i.test(parent.textContent || "")) {
+			return false;
+		}
+
+		var icons = inlineGradeIconChildren(parent);
+
+		if (icons.length < 2) {
+			return false;
+		}
+
+		for (var i = 0; i < parent.childNodes.length; i++) {
+			var node = parent.childNodes[i];
+
+			if (node.nodeType === Node.TEXT_NODE && !node.nodeValue.trim()) {
+				continue;
+			}
+
+			if (node.nodeType === Node.ELEMENT_NODE && node.tagName.toLowerCase() === "br") {
+				continue;
+			}
+
+			return node.nodeType === Node.ELEMENT_NODE && gradeIconCandidate(node);
+		}
+
+		return false;
+	}
+
 	function inlineGradeParents() {
-		var roots = Array.prototype.slice.call(document.querySelectorAll("main article, .com-content-article, .item-page, [itemprop='articleBody'], main"));
+		var roots = Array.prototype.slice.call(document.querySelectorAll(".mod-custom, .custom, .module, .moduletable, main article, .com-content-article, .item-page, [itemprop='articleBody']"));
 		var parents = [];
 
 		roots.forEach(function(root) {
@@ -844,7 +898,7 @@ function(config) {
 					parent = wrapper.parentElement;
 				}
 
-				if (parent && parents.indexOf(parent) === -1 && /\b(mi|km)\b/i.test(parent.textContent || "")) {
+				if (parent && parents.indexOf(parent) === -1 && inlineGradeParentCandidate(parent)) {
 					parents.push(parent);
 				}
 			});
@@ -904,7 +958,7 @@ function(config) {
 	}
 
 	function alignInlineGradeParent(parent) {
-		if (!alignGradeIcons || !parent || parent.getAttribute("data-ra_tweaks-inline-grade-aligned") === "1") {
+		if (!alignGradeIcons || !inlineGradeParentCandidate(parent)) {
 			return;
 		}
 
