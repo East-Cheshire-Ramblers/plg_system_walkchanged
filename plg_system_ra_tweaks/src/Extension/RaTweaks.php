@@ -777,6 +777,24 @@ function(config) {
 		return Array.prototype.slice.call(document.querySelectorAll(".walkPublished .pointer, .walkdetail .pointer"));
 	}
 
+	function mediaElement(element) {
+		if (!element || element.nodeType !== Node.ELEMENT_NODE) {
+			return null;
+		}
+
+		if (["img", "svg", "picture"].indexOf(element.tagName.toLowerCase()) !== -1) {
+			return element;
+		}
+
+		var child = element.firstElementChild;
+
+		if (child && ["img", "svg", "picture"].indexOf(child.tagName.toLowerCase()) !== -1) {
+			return child;
+		}
+
+		return null;
+	}
+
 	function firstGradeIcon(container) {
 		var child = container.firstElementChild;
 
@@ -784,15 +802,69 @@ function(config) {
 			return null;
 		}
 
-		if (["img", "svg", "picture"].indexOf(child.tagName.toLowerCase()) !== -1) {
-			return child;
-		}
-
-		if (child.querySelector && child.querySelector("img, svg, picture")) {
+		if (mediaElement(child)) {
 			return child;
 		}
 
 		return null;
+	}
+
+	function gradeIconCandidate(element) {
+		var media = mediaElement(element);
+
+		if (!media || media.closest("[data-ra_tweaks-grade-text], [data-ra_tweaks-grade-row]")) {
+			return false;
+		}
+
+		var parent = element.parentElement;
+
+		if (!parent || !/\b(mi|km)\b/i.test(parent.textContent || "")) {
+			return false;
+		}
+
+		var rect = media.getBoundingClientRect();
+
+		if (rect.width > 0 && rect.height > 0 && (rect.width < 20 || rect.width > 90 || rect.height < 20 || rect.height > 90)) {
+			return false;
+		}
+
+		return true;
+	}
+
+	function inlineGradeParents() {
+		var roots = Array.prototype.slice.call(document.querySelectorAll("main article, .com-content-article, .item-page, [itemprop='articleBody'], main"));
+		var parents = [];
+
+		roots.forEach(function(root) {
+			Array.prototype.slice.call(root.querySelectorAll("img, svg, picture")).forEach(function(media) {
+				var wrapper = media.parentElement;
+				var parent = wrapper;
+
+				if (wrapper && wrapper.textContent.trim() === "" && wrapper.parentElement) {
+					parent = wrapper.parentElement;
+				}
+
+				if (parent && parents.indexOf(parent) === -1 && /\b(mi|km)\b/i.test(parent.textContent || "")) {
+					parents.push(parent);
+				}
+			});
+		});
+
+		return parents;
+	}
+
+	function applyGradeRowLayout(row, icon, textWrap) {
+		row.style.display = "grid";
+		row.style.gridTemplateColumns = "max-content minmax(0, 1fr)";
+		row.style.columnGap = "0.65em";
+		row.style.alignItems = "center";
+		row.style.gridAutoRows = "auto";
+		row.style.marginBottom = "0.35em";
+		icon.style.justifySelf = "center";
+		icon.style.alignSelf = "center";
+		textWrap.style.minWidth = "0";
+		textWrap.style.display = "block";
+		textWrap.style.gridColumn = "2";
 	}
 
 	function alignGradeIcon(container) {
@@ -821,17 +893,64 @@ function(config) {
 		}
 
 		container.appendChild(textWrap);
-		container.style.display = "grid";
-		container.style.gridTemplateColumns = "max-content minmax(0, 1fr)";
-		container.style.columnGap = "0.65em";
-		container.style.alignItems = "center";
-		container.style.gridAutoRows = "auto";
-		icon.style.justifySelf = "center";
-		icon.style.alignSelf = "center";
-		textWrap.style.minWidth = "0";
-		textWrap.style.display = "block";
-		textWrap.style.gridColumn = "2";
+		applyGradeRowLayout(container, icon, textWrap);
 		container.setAttribute("data-ra_tweaks-grade-aligned", "1");
+	}
+
+	function trimTrailingBreak(textWrap) {
+		while (textWrap.lastChild && textWrap.lastChild.nodeType === Node.ELEMENT_NODE && textWrap.lastChild.tagName.toLowerCase() === "br") {
+			textWrap.removeChild(textWrap.lastChild);
+		}
+	}
+
+	function alignInlineGradeParent(parent) {
+		if (!alignGradeIcons || !parent || parent.getAttribute("data-ra_tweaks-inline-grade-aligned") === "1") {
+			return;
+		}
+
+		var nodes = Array.prototype.slice.call(parent.childNodes);
+		var fragment = document.createDocumentFragment();
+		var currentText = null;
+		var changed = false;
+
+		nodes.forEach(function(node) {
+			if (node.nodeType === Node.ELEMENT_NODE && gradeIconCandidate(node)) {
+				if (currentText) {
+					trimTrailingBreak(currentText);
+				}
+
+				var row = document.createElement("span");
+				var textWrap = document.createElement("span");
+
+				row.setAttribute("data-ra_tweaks-grade-row", "1");
+				textWrap.setAttribute("data-ra_tweaks-grade-text", "1");
+				row.appendChild(node);
+				row.appendChild(textWrap);
+				applyGradeRowLayout(row, node, textWrap);
+				fragment.appendChild(row);
+				currentText = textWrap;
+				changed = true;
+
+				return;
+			}
+
+			if (currentText) {
+				currentText.appendChild(node);
+			} else {
+				fragment.appendChild(node);
+			}
+		});
+
+		if (!changed) {
+			return;
+		}
+
+		if (currentText) {
+			trimTrailingBreak(currentText);
+		}
+
+		parent.appendChild(fragment);
+		parent.setAttribute("data-ra_tweaks-inline-grade-aligned", "1");
 	}
 
 	function processElement(container) {
@@ -868,6 +987,7 @@ function(config) {
 			alignGradeIcon(container);
 			processElement(container);
 		});
+		inlineGradeParents().forEach(alignInlineGradeParent);
 
 		if (!highlightChangedWalks || typeof document.createTreeWalker !== "function") {
 			return;
