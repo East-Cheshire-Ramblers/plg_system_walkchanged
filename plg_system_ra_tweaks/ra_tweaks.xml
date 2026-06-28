@@ -7,7 +7,7 @@
 	<license>GNU General Public License version 3 or later; see LICENSE.txt</license>
 	<authorEmail>webmaster@bigley.me.uk</authorEmail>
 	<authorUrl>https://ramblerseastcheshire.org.uk/</authorUrl>
-	<version>1.1.14</version>
+	<version>1.1.15</version>
 	<description>PLG_SYSTEM_RA_TWEAKS_XML_DESCRIPTION</description>
 	<namespace path="src">Ramblerseastcheshire\Plugin\System\RaTweaks</namespace>
 	<files>
@@ -24,7 +24,18 @@
 	</updateservers>
 	<config>
 		<fields name="params">
-			<fieldset name="basic">
+			<fieldset
+				name="changed_walk_highlighting"
+				label="PLG_SYSTEM_RA_TWEAKS_FIELDSET_CHANGED_WALK_HIGHLIGHTING_LABEL"
+				description="PLG_SYSTEM_RA_TWEAKS_FIELDSET_CHANGED_WALK_HIGHLIGHTING_DESC"
+			>
+				<field
+					name="changed_walk_highlighting_intro"
+					type="spacer"
+					label="PLG_SYSTEM_RA_TWEAKS_FIELDSET_CHANGED_WALK_HIGHLIGHTING_LABEL"
+					description="PLG_SYSTEM_RA_TWEAKS_FIELDSET_CHANGED_WALK_HIGHLIGHTING_DESC"
+					class="text"
+				/>
 				<field
 					name="marker"
 					type="text"
@@ -45,6 +56,19 @@
 					label="PLG_SYSTEM_RA_TWEAKS_FIELD_CANCEL_TERMS_LABEL"
 					description="PLG_SYSTEM_RA_TWEAKS_FIELD_CANCEL_TERMS_DESC"
 					default="cancelled,canceled"
+				/>
+			</fieldset>
+			<fieldset
+				name="miscellaneous_tweaks"
+				label="PLG_SYSTEM_RA_TWEAKS_FIELDSET_MISC_TWEAKS_LABEL"
+				description="PLG_SYSTEM_RA_TWEAKS_FIELDSET_MISC_TWEAKS_DESC"
+			>
+				<field
+					name="miscellaneous_tweaks_intro"
+					type="spacer"
+					label="PLG_SYSTEM_RA_TWEAKS_FIELDSET_MISC_TWEAKS_LABEL"
+					description="PLG_SYSTEM_RA_TWEAKS_FIELDSET_MISC_TWEAKS_DESC"
+					class="text"
 				/>
 				<field
 					name="align_grade_icons"
